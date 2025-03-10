@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -20,12 +21,7 @@ public abstract class ScriptContentGeneratorBase : IIncrementalGenerator
             {
                 var symbol = ctx.SemanticModel.GetDeclaredSymbol(ctx.Node, token) as INamedTypeSymbol;
 
-                if (symbol?.ContainingNamespace?.ToString() == "OpenSage.Scripting")
-                {
-                    return symbol;
-                }
-
-                return null;
+                return symbol?.ContainingNamespace?.ToString() == "OpenSage.Scripting" ? symbol : null;
             });
 
         var scriptActionsTypeEnum = context.SyntaxProvider.CreateSyntaxProvider(
@@ -34,26 +30,16 @@ public abstract class ScriptContentGeneratorBase : IIncrementalGenerator
             {
                 var symbol = ctx.SemanticModel.GetDeclaredSymbol(ctx.Node, token) as INamedTypeSymbol;
 
-                if (symbol?.ContainingNamespace?.ToString() == "OpenSage.Scripting")
-                {
-                    return symbol;
-                }
-
-                return null;
+                return symbol?.ContainingNamespace?.ToString() == "OpenSage.Scripting" ? symbol : null;
             });
 
         var sageGameEnum = context.SyntaxProvider.CreateSyntaxProvider(
-            static (s, token) => s is EnumDeclarationSyntax eds && eds.Identifier.Text == "SageGame",
+            static (s, token) => s is EnumDeclarationSyntax { Identifier.Text: "SageGame" },
             static (ctx, token) =>
             {
                 var symbol = ctx.SemanticModel.GetDeclaredSymbol(ctx.Node, token) as INamedTypeSymbol;
 
-                if (symbol?.ContainingNamespace?.Name == "OpenSage")
-                {
-                    return symbol;
-                }
-
-                return null;
+                return symbol?.ContainingNamespace?.Name == "OpenSage" ? symbol : null;
             });
 
         var interestingTypes = scriptActionsClass.Collect()
@@ -64,7 +50,13 @@ public abstract class ScriptContentGeneratorBase : IIncrementalGenerator
             interestingTypes,
             (spc, source) =>
             {
-                Execute(spc, source.Left.Left.First(), source.Left.Right.First(), source.Right.First());
+                var scriptContentClass = source.Left.Left.First();
+                Debug.Assert(scriptContentClass is not null);
+                var scriptContentTypeEnum = source.Left.Right.First();
+                Debug.Assert(scriptContentTypeEnum is not null);
+                var gameEnum = source.Right.First();
+                Debug.Assert(gameEnum is not null);
+                Execute(spc, scriptContentClass, scriptContentTypeEnum, gameEnum);
             });
     }
 
@@ -78,10 +70,16 @@ public abstract class ScriptContentGeneratorBase : IIncrementalGenerator
     {
         var sageGameType = context.Compilation.GetTypeByMetadataName("OpenSage.SageGame");
 
+        Debug.Assert(sageGameType is not null);
 #pragma warning disable RS1024 // Compare symbols correctly
         return sageGameType.GetMembers()
             .Where(x => x.Kind == SymbolKind.Field)
-            .ToDictionary(x => (int)((IFieldSymbol)x).ConstantValue, x => x.Name);
+            .ToDictionary(x =>
+            {
+                var result = ((IFieldSymbol)x).ConstantValue;
+                Debug.Assert(result is int);
+                return (int)result;
+            }, x => x.Name);
 #pragma warning restore RS1024 // Compare symbols correctly
     }
 
@@ -90,7 +88,12 @@ public abstract class ScriptContentGeneratorBase : IIncrementalGenerator
 #pragma warning disable RS1024 // Compare symbols correctly
         return sageGameType.GetMembers()
             .Where(x => x.Kind == SymbolKind.Field)
-            .ToDictionary(x => (int)((IFieldSymbol)x).ConstantValue, x => x.Name);
+            .ToDictionary(x =>
+            {
+                var result = ((IFieldSymbol)x).ConstantValue;
+                Debug.Assert(result is int);
+                return (int)result;
+            }, x => x.Name);
 #pragma warning restore RS1024 // Compare symbols correctly
     }
 
@@ -98,10 +101,16 @@ public abstract class ScriptContentGeneratorBase : IIncrementalGenerator
     {
         var contentTypeType = context.Compilation.GetTypeByMetadataName(enumTypeName);
 
+        Debug.Assert(contentTypeType is not null);
 #pragma warning disable RS1024 // Compare symbols correctly
         return contentTypeType.GetMembers()
             .Where(x => x.Kind == SymbolKind.Field)
-            .ToDictionary(x => (uint)((IFieldSymbol)x).ConstantValue, x => x.Name);
+            .ToDictionary(x =>
+            {
+                var result = ((IFieldSymbol)x).ConstantValue;
+                Debug.Assert(result is uint);
+                return (uint)result;
+            }, x => x.Name);
 #pragma warning restore RS1024 // Compare symbols correctly
     }
 
@@ -110,7 +119,12 @@ public abstract class ScriptContentGeneratorBase : IIncrementalGenerator
 #pragma warning disable RS1024 // Compare symbols correctly
         return contentTypeType.GetMembers()
             .Where(x => x.Kind == SymbolKind.Field)
-            .ToDictionary(x => (uint)((IFieldSymbol)x).ConstantValue, x => x.Name);
+            .ToDictionary(x =>
+            {
+                var result = ((IFieldSymbol)x).ConstantValue;
+                Debug.Assert(result is uint);
+                return (uint)result;
+            }, x => x.Name);
 #pragma warning restore RS1024 // Compare symbols correctly
     }
 

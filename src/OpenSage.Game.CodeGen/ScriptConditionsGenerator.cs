@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -60,7 +61,12 @@ public sealed class ScriptConditionsGenerator : ScriptContentGeneratorBase
         foreach (var method in methods)
         {
             var scriptConditionAttribute = method.GetAttributes()
-                .FirstOrDefault(x => x.AttributeClass.Name == "ScriptConditionAttribute");
+                .FirstOrDefault(x =>
+                {
+                    var name = x.AttributeClass?.Name;
+                    Debug.Assert(name is not null);
+                    return name == "ScriptConditionAttribute";
+                });
 
             if (scriptConditionAttribute == null)
             {
@@ -80,6 +86,8 @@ public sealed class ScriptConditionsGenerator : ScriptContentGeneratorBase
                 parameterTypes[i] = parameters[i + 1].Type;
             }
 
+            var scriptConditionAttributeValue = scriptConditionAttribute.ConstructorArguments[0].Value;
+            Debug.Assert(scriptConditionAttributeValue is uint);
             var conditionType = (uint)scriptConditionAttribute.ConstructorArguments[0].Value;
             var conditionName = scriptConditionNameLookup[conditionType];
 
@@ -95,7 +103,9 @@ public sealed class ScriptConditionsGenerator : ScriptContentGeneratorBase
                     {
                         sb.Append(" || ");
                     }
-                    sb.Append($"game == SageGame.{sageGameNameLookup[(int)games[i].Value]}");
+                    var gamesValue = games[i].Value;
+                    Debug.Assert(gamesValue is int);
+                    sb.Append($"game == SageGame.{sageGameNameLookup[(int)gamesValue]}");
                 }
             }
 
@@ -106,10 +116,11 @@ public sealed class ScriptConditionsGenerator : ScriptContentGeneratorBase
             {
                 sb.Append($", {GetArgument(i, parameterTypes, "condition")}");
             }
-            sb.AppendLine($"))");
+            sb.AppendLine("))");
             sb.AppendLine("                    {");
 
-            var displayTemplate = (string)scriptConditionAttribute.ConstructorArguments[2].Value;
+            var displayTemplate = scriptConditionAttribute.ConstructorArguments[2].Value as string;
+            Debug.Assert(displayTemplate is not null);
             sb.Append($"                        Logger.Info(string.Format(\"Script condition evaluated to true: {displayTemplate}\"");
             for (var i = 0; i < parameterTypes.Length; i++)
             {

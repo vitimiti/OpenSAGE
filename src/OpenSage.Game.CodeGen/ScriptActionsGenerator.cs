@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Microsoft.CodeAnalysis;
@@ -60,7 +61,7 @@ public sealed class ScriptActionsGenerator : ScriptContentGeneratorBase
         foreach (var method in methods)
         {
             var scriptActionAttribute = method.GetAttributes()
-                .FirstOrDefault(x => x.AttributeClass.Name == "ScriptActionAttribute");
+                .FirstOrDefault(x => x.AttributeClass?.Name == "ScriptActionAttribute");
 
             if (scriptActionAttribute == null)
             {
@@ -80,7 +81,9 @@ public sealed class ScriptActionsGenerator : ScriptContentGeneratorBase
                 parameterTypes[i] = parameters[i + 1].Type;
             }
 
-            var actionType = (uint)scriptActionAttribute.ConstructorArguments[0].Value;
+            var scriptActionAttributeValue = scriptActionAttribute.ConstructorArguments[0].Value;
+            Debug.Assert(scriptActionAttribute.ConstructorArguments[0].Value is uint);
+            var actionType = (uint)scriptActionAttributeValue;
             var actionName = scriptActionNameLookup[actionType];
 
             sb.Append($"                case ScriptActionType.{actionName}");
@@ -95,7 +98,9 @@ public sealed class ScriptActionsGenerator : ScriptContentGeneratorBase
                     {
                         sb.Append(" || ");
                     }
-                    sb.Append($"game == SageGame.{sageGameNameLookup[(int)games[i].Value]}");
+                    var gamesValue = games[i].Value;
+                    Debug.Assert(gamesValue is int);
+                    sb.Append($"game == SageGame.{sageGameNameLookup[(int)gamesValue]}");
                 }
             }
 
@@ -106,9 +111,10 @@ public sealed class ScriptActionsGenerator : ScriptContentGeneratorBase
             {
                 sb.Append($", {GetArgument(i, parameterTypes, "action")}");
             }
-            sb.AppendLine($");");
+            sb.AppendLine(");");
 
-            var displayTemplate = (string)scriptActionAttribute.ConstructorArguments[2].Value;
+            var displayTemplate = scriptActionAttribute.ConstructorArguments[2].Value as string;
+            Debug.Assert(displayTemplate is not null);
             sb.Append($"                    Logger.Info(string.Format(\"Executed script action: {displayTemplate}\"");
             for (var i = 0; i < parameterTypes.Length; i++)
             {
@@ -116,7 +122,7 @@ public sealed class ScriptActionsGenerator : ScriptContentGeneratorBase
             }
             sb.AppendLine("));");
 
-            sb.AppendLine($"                    break;");
+            sb.AppendLine("                    break;");
             sb.AppendLine();
         }
     }
