@@ -14,8 +14,8 @@ namespace Veldrid;
 /// </summary>
 public class ImGuiRenderer : IDisposable
 {
-    private GraphicsDevice? _gd;
-    private readonly Assembly? _assembly;
+    private GraphicsDevice _gd;
+    private readonly Assembly _assembly;
     private ColorSpaceHandling _colorSpaceHandling;
 
     // Device objects
