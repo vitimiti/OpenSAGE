@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -71,10 +72,10 @@ public static class Program
         LogManager.Setup().SetupExtensions(b => b.RegisterTarget<Core.InternalLogger>("OpenSage"));
 
         Parser.Default.ParseArguments<Options>(args)
-          .WithParsed(opts => Run(opts));
+          .WithParsed(Run);
     }
 
-    private static NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
+    private static readonly NLog.Logger Logger = NLog.LogManager.GetCurrentClassLogger();
 
     private static GameInstallation? GameFromPath(Options opts, SageGame game, string? path)
     {
@@ -84,22 +85,24 @@ public static class Program
 
         foreach (var gameDef in GameDefinition.All)
         {
-            if (gameDef.Probe(path))
+            if (!gameDef.Probe(path))
             {
-                game = gameDef.Game;
-                UseLocators = false;
+                continue;
             }
+
+            game = gameDef.Game;
+            UseLocators = false;
         }
 
         var definition = GameDefinition.FromGame(game);
         if (UseLocators)
         {
             return GameInstallation
-                .FindAll(new[] { definition })
+                .FindAll([definition])
                 .FirstOrDefault();
         }
 
-        var baseGame = definition.BaseGame != null
+        var baseGame = definition.BaseGame is not null
             ? GameFromPath(opts, definition.BaseGame.Game, opts.BaseGamePath) // we shouldn't ever have more than one base game
             : null;
         return new GameInstallation(definition, path, baseGame);
@@ -111,7 +114,7 @@ public static class Program
 
         var installation = GameFromPath(opts, opts.Game, opts.GamePath);
 
-        if (installation == null)
+        if (installation is null)
         {
             var definition = GameDefinition.FromGame(opts.Game);
             Console.WriteLine($"OpenSAGE was unable to find any installations of {definition.DisplayName}.\n");
@@ -150,13 +153,19 @@ public static class Program
 
         UPnP.InitializeAsync(TimeSpan.FromSeconds(10)).ContinueWith(_ => Logger.Info($"UPnP status: {UPnP.Status}"));
 
-        Logger.Debug($"Have configuration");
+        Logger.Debug("Have configuration");
 
-        using (var window = new GameWindow($"OpenSAGE - {installation.Game.DisplayName} - master", 100, 100, 1024, 768, opts.Fullscreen))
-        using (var game = new Game(installation, opts.Renderer, config, window))
-        using (var textureCopier = new TextureCopier(game, window.Swapchain.Framebuffer.OutputDescription))
-        using (var developerModeView = new DeveloperModeView(game, window))
+        GameWindow? window = null;
+        Game? game = null;
+        TextureCopier? textureCopier = null;
+        DeveloperModeView? developerModeView = null;
+        try
         {
+            window = new GameWindow($"OpenSAGE - {installation.Game.DisplayName} - master", 100, 100, 1024, 768,
+                opts.Fullscreen);
+            game = new Game(installation, opts.Renderer, config, window);
+            textureCopier = new TextureCopier(game, window.Swapchain.Framebuffer.OutputDescription);
+            developerModeView = new DeveloperModeView(game, window);
             game.GraphicsDevice.SyncToVerticalBlank = !opts.DisableVsync;
 
             var developerModeEnabled = opts.DeveloperMode;
@@ -166,10 +175,11 @@ public static class Program
                 window.Maximized = true;
             }
 
-            if (opts.ReplayFile != null)
+            if (opts.ReplayFile is not null)
             {
-                var replayFile = game.ContentManager.UserDataFileSystem?.GetFile(Path.Combine("Replays", opts.ReplayFile));
-                if (replayFile == null)
+                var replayFile =
+                    game.ContentManager.UserDataFileSystem?.GetFile(Path.Combine("Replays", opts.ReplayFile));
+                if (replayFile is null)
                 {
                     Logger.Debug("Could not find entry for Replay " + opts.ReplayFile);
                     game.ShowMainMenu();
@@ -177,10 +187,10 @@ public static class Program
 
                 game.LoadReplayFile(replayFile);
             }
-            else if (opts.SaveFile != null)
+            else if (opts.SaveFile is not null)
             {
                 var saveFile = game.ContentManager.UserDataFileSystem?.GetFile(Path.Combine("Save", opts.SaveFile));
-                if (saveFile == null)
+                if (saveFile is null)
                 {
                     Logger.Debug("Could not find entry for Save " + opts.SaveFile);
                     game.ShowMainMenu();
@@ -188,7 +198,7 @@ public static class Program
 
                 game.LoadSaveFile(saveFile);
             }
-            else if (opts.Map != null)
+            else if (opts.Map is not null)
             {
                 game.Restart = StartMap;
                 StartMap();
@@ -196,7 +206,7 @@ public static class Program
                 void StartMap()
                 {
                     var mapCache = game.AssetStore.MapCaches.GetByName(opts.Map);
-                    if (mapCache == null)
+                    if (mapCache is null)
                     {
                         Logger.Warn("Could not find MapCache entry for map " + opts.Map);
                         game.ShowMainMenu();
@@ -236,22 +246,19 @@ public static class Program
                     HandlingPriority.Window,
                     message =>
                     {
-                        if (message.MessageType != InputMessageType.KeyDown)
-                            return InputMessageResult.NotHandled;
+                        if (message.MessageType != InputMessageType.KeyDown) return InputMessageResult.NotHandled;
 
-                        if (message.Value.Key == Key.Enter && (message.Value.Modifiers & ModifierKeys.Alt) != 0)
+                        switch (message.Value.Key)
                         {
-                            window.Fullscreen = !window.Fullscreen;
-                            return InputMessageResult.Handled;
+                            case Key.Enter when (message.Value.Modifiers & ModifierKeys.Alt) != 0:
+                                window.Fullscreen = !window.Fullscreen;
+                                return InputMessageResult.Handled;
+                            case Key.D when (message.Value.Modifiers & ModifierKeys.Alt) != 0:
+                                developerModeEnabled = !developerModeEnabled;
+                                return InputMessageResult.Handled;
+                            default:
+                                return InputMessageResult.NotHandled;
                         }
-
-                        if (message.Value.Key == Key.D && (message.Value.Modifiers & ModifierKeys.Alt) != 0)
-                        {
-                            developerModeEnabled = !developerModeEnabled;
-                            return InputMessageResult.Handled;
-                        }
-
-                        return InputMessageResult.NotHandled;
                     }));
 
             Logger.Debug("Starting game");
@@ -286,6 +293,13 @@ public static class Program
 
                 game.GraphicsDevice.SwapBuffers(window.Swapchain);
             }
+        }
+        finally
+        {
+            developerModeView?.Dispose();
+            textureCopier?.Dispose();
+            game?.Dispose();
+            window?.Dispose();
         }
 
         if (traceEnabled)
