@@ -15,13 +15,13 @@ internal static class SkudefReader
             string[] versions;
             if (lastUnderscore != -1)
             {
-                languageName = body.Substring(0, lastUnderscore);
+                languageName = body[..lastUnderscore];
                 versions = body[(lastUnderscore + 1)..].Split('.');
             }
             else
             {
                 languageName = body;
-                versions = new[] { "0", "0" };
+                versions = ["0", "0"];
             }
 
             return new SkudefVersion
@@ -56,12 +56,10 @@ internal static class SkudefReader
         }
 
         // If no skudef (i.e. for pre-C&C3 games), use default one.
-        using (var skudefFileContents = (skudefFile != null)
+        using var skudefFileContents = (skudefFile != null)
             ? (TextReader)new StreamReader(skudefFile)
-            : new StringReader("add-bigs-recurse ."))
-        {
-            Read(rootDirectory, skudefFileContents, addBigArchive);
-        }
+            : new StringReader("add-bigs-recurse .");
+        Read(rootDirectory, skudefFileContents, addBigArchive);
     }
 
     private static void Read(string skudefDirectory, TextReader skudefReader, Action<string> addBigArchive)
@@ -74,8 +72,8 @@ internal static class SkudefReader
             }
 
             var spaceIndex = line.IndexOf(' ');
-            var command = line.Substring(0, spaceIndex);
-            var parameter = line.Substring(spaceIndex + 1);
+            var command = line[..spaceIndex];
+            var parameter = line[(spaceIndex + 1)..];
             var fullPath = FileSystem.NormalizeFilePath(Path.Combine(skudefDirectory, parameter));
 
             switch (command)

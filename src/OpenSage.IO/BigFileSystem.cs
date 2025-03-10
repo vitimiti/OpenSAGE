@@ -27,7 +27,7 @@ public sealed class BigFileSystem : FileSystem
                 bigDirectory = bigDirectory.GetOrCreateDirectory(directoryParts[i]);
             }
 
-            var fileName = directoryParts[directoryParts.Length - 1];
+            var fileName = directoryParts[^1];
 
             bigDirectory.Files.TryAdd(fileName, bigArchiveEntry);
         }
@@ -42,19 +42,15 @@ public sealed class BigFileSystem : FileSystem
 
         var bigDirectory = _rootDirectory;
 
-        if (directoryPath != "")
+        if (directoryPath == "")
         {
-            var directoryParts = NormalizeFilePath(directoryPath).Split(Path.DirectorySeparatorChar);
-            for (var i = 0; i < directoryParts.Length; i++)
-            {
-                if (!bigDirectory.Directories.TryGetValue(directoryParts[i], out bigDirectory))
-                {
-                    return Enumerable.Empty<FileSystemEntry>();
-                }
-            }
+            return GetFilesInDirectory(bigDirectory, search, searchOption);
         }
 
-        return GetFilesInDirectory(bigDirectory, search, searchOption);
+        var directoryParts = NormalizeFilePath(directoryPath).Split(Path.DirectorySeparatorChar);
+        return directoryParts.Any(directoryPart => !bigDirectory.Directories.TryGetValue(directoryPart, out bigDirectory))
+            ? []
+            : GetFilesInDirectory(bigDirectory, search, searchOption);
     }
 
     private IEnumerable<FileSystemEntry> GetFilesInDirectory(
@@ -62,24 +58,20 @@ public sealed class BigFileSystem : FileSystem
         SearchPattern searchPattern,
         SearchOption searchOption)
     {
-        foreach (var file in bigDirectory.Files.Values)
+        foreach (var file in bigDirectory.Files.Values.Where(file => searchPattern.Match(file.FullName)))
         {
-            if (!searchPattern.Match(file.FullName))
-            {
-                continue;
-            }
-
             yield return CreateFileSystemEntry(file);
         }
 
-        if (searchOption == SearchOption.AllDirectories)
+        if (searchOption != SearchOption.AllDirectories)
         {
-            foreach (var directory in bigDirectory.Directories.Values)
+            yield break;
+        }
+
+        {
+            foreach (var file in bigDirectory.Directories.Values.SelectMany(directory => GetFilesInDirectory(directory, searchPattern, searchOption)))
             {
-                foreach (var file in GetFilesInDirectory(directory, searchPattern, searchOption))
-                {
-                    yield return file;
-                }
+                yield return file;
             }
         }
     }
@@ -97,14 +89,9 @@ public sealed class BigFileSystem : FileSystem
             }
         }
 
-        var fileName = directoryParts[directoryParts.Length - 1];
+        var fileName = directoryParts[^1];
 
-        if (!bigDirectory.Files.TryGetValue(fileName, out var file))
-        {
-            return null;
-        }
-
-        return CreateFileSystemEntry(file);
+        return !bigDirectory.Files.TryGetValue(fileName, out var file) ? null : CreateFileSystemEntry(file);
     }
 
     private FileSystemEntry CreateFileSystemEntry(BigArchiveEntry entry)
@@ -118,16 +105,18 @@ public sealed class BigFileSystem : FileSystem
 
     private sealed class BigDirectory
     {
-        public readonly Dictionary<string, BigDirectory> Directories = new Dictionary<string, BigDirectory>(StringComparer.InvariantCultureIgnoreCase);
-        public readonly Dictionary<string, BigArchiveEntry> Files = new Dictionary<string, BigArchiveEntry>(StringComparer.InvariantCultureIgnoreCase);
+        public readonly Dictionary<string, BigDirectory> Directories = new(StringComparer.InvariantCultureIgnoreCase);
+        public readonly Dictionary<string, BigArchiveEntry> Files = new(StringComparer.InvariantCultureIgnoreCase);
 
         public BigDirectory GetOrCreateDirectory(string directoryName)
         {
-            if (!Directories.TryGetValue(directoryName, out var directory))
+            if (Directories.TryGetValue(directoryName, out var directory))
             {
-                directory = new BigDirectory();
-                Directories.Add(directoryName, directory);
+                return directory;
             }
+
+            directory = new BigDirectory();
+            Directories.Add(directoryName, directory);
             return directory;
         }
     }

@@ -15,12 +15,7 @@ public sealed class VirtualFileSystem : FileSystem
 
     public override FileSystemEntry? GetFile(string filePath)
     {
-        if (!TryGetRelativePath(filePath, out var relativePath))
-        {
-            return null;
-        }
-
-        return _targetFileSystem.GetFile(relativePath);
+        return !TryGetRelativePath(filePath, out var relativePath) ? null : _targetFileSystem.GetFile(relativePath);
     }
 
     public override IEnumerable<FileSystemEntry> GetFilesInDirectory(
@@ -30,7 +25,7 @@ public sealed class VirtualFileSystem : FileSystem
     {
         if (!TryGetRelativePath(directoryPath, out var relativePath))
         {
-            return Enumerable.Empty<FileSystemEntry>();
+            return [];
         }
 
         return _targetFileSystem.GetFilesInDirectory(
@@ -47,7 +42,7 @@ public sealed class VirtualFileSystem : FileSystem
             return false;
         }
 
-        relativePath = path.Substring(_virtualDirectory.Length);
+        relativePath = path[_virtualDirectory.Length..];
         return true;
     }
 }

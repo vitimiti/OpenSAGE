@@ -16,16 +16,7 @@ public sealed class CompositeFileSystem : FileSystem
 
     public override FileSystemEntry? GetFile(string filePath)
     {
-        foreach (var fileSystem in _fileSystems)
-        {
-            var fileSystemEntry = fileSystem.GetFile(filePath);
-            if (fileSystemEntry != null)
-            {
-                return fileSystemEntry;
-            }
-        }
-
-        return null;
+        return _fileSystems.Select(fileSystem => fileSystem.GetFile(filePath)).OfType<FileSystemEntry>().FirstOrDefault();
     }
 
     public override IEnumerable<FileSystemEntry> GetFilesInDirectory(
@@ -39,12 +30,10 @@ public sealed class CompositeFileSystem : FileSystem
         {
             foreach (var fileSystemEntry in fileSystem.GetFilesInDirectory(directoryPath, searchPattern, searchOption))
             {
-                if (paths.Contains(fileSystemEntry.FilePath))
+                if (!paths.Add(fileSystemEntry.FilePath))
                 {
                     continue;
                 }
-
-                paths.Add(fileSystemEntry.FilePath);
 
                 yield return fileSystemEntry;
             }

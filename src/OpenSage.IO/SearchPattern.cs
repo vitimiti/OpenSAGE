@@ -32,7 +32,7 @@ namespace OpenSage.IO;
 
 internal readonly struct SearchPattern
 {
-    private static readonly char[] SpecialChars = { '?', '*' };
+    private static readonly char[] SpecialChars = ['?', '*'];
 
     private readonly string? _exactMatch;
     private readonly Regex? _regexMatch;
@@ -44,20 +44,14 @@ internal readonly struct SearchPattern
     /// <returns><c>true</c> if the path was matched, <c>false</c> otherwise.</returns>
     public bool Match(string name)
     {
-        if (name is null)
-        {
-            throw new ArgumentNullException(nameof(name));
-        }
+        ArgumentNullException.ThrowIfNull(name);
         // if _execMatch is null and _regexMatch is null, we have a * match
         return _exactMatch != null ? _exactMatch == name : _regexMatch is null || _regexMatch.IsMatch(name);
     }
 
     public SearchPattern(string searchPattern)
     {
-        if (searchPattern is null)
-        {
-            throw new ArgumentNullException(nameof(searchPattern));
-        }
+        ArgumentNullException.ThrowIfNull(searchPattern);
 
         _exactMatch = null;
         _regexMatch = null;
@@ -74,7 +68,7 @@ internal readonly struct SearchPattern
             throw new NotSupportedException();
         }
 
-        int startIndex = 0;
+        var startIndex = 0;
         int nextIndex;
         StringBuilder? builder = null;
         while ((nextIndex = searchPattern.IndexOfAny(SpecialChars, startIndex)) >= 0)

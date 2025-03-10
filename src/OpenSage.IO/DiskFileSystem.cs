@@ -38,12 +38,7 @@ public sealed class DiskFileSystem : FileSystem
     {
         var fullFilePath = Path.Combine(RootDirectory, NormalizeFilePath(filePath));
         var fileInfo = new FileInfo(fullFilePath);
-        if (!fileInfo.Exists)
-        {
-            return null;
-        }
-
-        return CreateFileSystemEntry(fileInfo);
+        return !fileInfo.Exists ? null : CreateFileSystemEntry(fileInfo);
     }
 
     private FileSystemEntry CreateFileSystemEntry(FileInfo fileInfo)
