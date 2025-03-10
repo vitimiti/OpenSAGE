@@ -5,6 +5,7 @@
     <RootNamespace>Veldrid</RootNamespace>
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
+    <RootNamespace>Veldrid</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
