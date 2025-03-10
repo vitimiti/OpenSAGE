@@ -35,7 +35,7 @@ internal static class MipmapHelper
 
     internal static Image<Rgba32>[] GenerateMipmaps(Image<Rgba32> baseImage)
     {
-        int mipLevelCount = MipmapHelper.ComputeMipLevels(baseImage.Width, baseImage.Height);
+        int mipLevelCount = ComputeMipLevels(baseImage.Width, baseImage.Height);
         Image<Rgba32>[] mipLevels = new Image<Rgba32>[mipLevelCount];
         mipLevels[0] = baseImage;
         int i = 1;

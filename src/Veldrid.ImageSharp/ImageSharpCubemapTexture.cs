@@ -60,8 +60,7 @@ public class ImageSharpCubemapTexture
             Image.Load<Rgba32>(positiveYPath),
             Image.Load<Rgba32>(negativeYPath),
             Image.Load<Rgba32>(positiveZPath),
-            Image.Load<Rgba32>(negativeZPath),
-            true)
+            Image.Load<Rgba32>(negativeZPath))
     { }
 
     public ImageSharpCubemapTexture(
@@ -120,12 +119,12 @@ public class ImageSharpCubemapTexture
 
         else
         {
-            CubemapTextures[0] = new Image<Rgba32>[1] { positiveX };
-            CubemapTextures[1] = new Image<Rgba32>[1] { negativeX };
-            CubemapTextures[2] = new Image<Rgba32>[1] { positiveY };
-            CubemapTextures[3] = new Image<Rgba32>[1] { negativeY };
-            CubemapTextures[4] = new Image<Rgba32>[1] { positiveZ };
-            CubemapTextures[5] = new Image<Rgba32>[1] { negativeZ };
+            CubemapTextures[0] = [positiveX];
+            CubemapTextures[1] = [negativeX];
+            CubemapTextures[2] = [positiveY];
+            CubemapTextures[3] = [negativeY];
+            CubemapTextures[4] = [positiveZ];
+            CubemapTextures[5] = [negativeZ];
         }
     }
 

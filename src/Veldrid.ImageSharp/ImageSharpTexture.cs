@@ -35,7 +35,7 @@ public class ImageSharpTexture
     /// <summary>
     /// The size of each pixel, in bytes.
     /// </summary>
-    public uint PixelSizeInBytes => sizeof(byte) * 4;
+    public static uint PixelSizeInBytes => sizeof(byte) * 4;
 
     /// <summary>
     /// The number of levels in the mipmap chain. This is equal to the length of the Images array.
@@ -52,14 +52,7 @@ public class ImageSharpTexture
     public ImageSharpTexture(Image<Rgba32> image, bool mipmap, bool srgb)
     {
         Format = srgb ? PixelFormat.R8_G8_B8_A8_UNorm_SRgb : PixelFormat.R8_G8_B8_A8_UNorm;
-        if (mipmap)
-        {
-            Images = MipmapHelper.GenerateMipmaps(image);
-        }
-        else
-        {
-            Images = new Image<Rgba32>[] { image };
-        }
+        Images = mipmap ? MipmapHelper.GenerateMipmaps(image) : [image];
     }
 
     public unsafe Texture CreateDeviceTexture(GraphicsDevice gd, ResourceFactory factory)
@@ -130,21 +123,20 @@ public class ImageSharpTexture
             {
                 throw new VeldridException("Unable to get image pixelspan.");
             }
-            using (var pin = pixelSpan.Pin())
-            {
-                gd.UpdateTexture(
-                    tex,
-                    (IntPtr)pin.Pointer,
-                    (uint)(PixelSizeInBytes * image.Width * image.Height),
-                    0,
-                    0,
-                    0,
-                    (uint)image.Width,
-                    (uint)image.Height,
-                    1,
-                    (uint)level,
-                    0);
-            }
+
+            using var pin = pixelSpan.Pin();
+            gd.UpdateTexture(
+                tex,
+                (IntPtr)pin.Pointer,
+                (uint)(PixelSizeInBytes * image.Width * image.Height),
+                0,
+                0,
+                0,
+                (uint)image.Width,
+                (uint)image.Height,
+                1,
+                (uint)level,
+                0);
         }
 
         return tex;
