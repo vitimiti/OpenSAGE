@@ -37,7 +37,8 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
         _raw = raw;
     }
 
-    private uint RawMantissa { get { return _raw & 0x7FFFFF; } }
+    private uint RawMantissa => _raw & 0x7FFFFF;
+
     private int Mantissa
     {
         get
@@ -55,9 +56,9 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
         }
     }
 
-    private sbyte Exponent { get { return (sbyte)(RawExponent - ExponentBias); } }
+    private sbyte Exponent => (sbyte)(RawExponent - ExponentBias);
 
-    private byte RawExponent { get { return (byte)(_raw >> MantissaBits); } }
+    private byte RawExponent => (byte)(_raw >> MantissaBits);
 
 
     private const uint SignMask = 0x80000000;
@@ -77,19 +78,19 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
     private const uint RawLog2OfE = 0;
 
 
-    public static SoftFloat Zero { get { return new SoftFloat(); } }
-    public static SoftFloat PositiveInfinity { get { return new SoftFloat(RawPositiveInfinity); } }
-    public static SoftFloat NegativeInfinity { get { return new SoftFloat(RawNegativeInfinity); } }
-    public static SoftFloat NaN { get { return new SoftFloat(RawNaN); } }
-    public static SoftFloat One { get { return new SoftFloat(RawOne); } }
-    public static SoftFloat MinusOne { get { return new SoftFloat(RawMinusOne); } }
-    public static SoftFloat MaxValue { get { return new SoftFloat(RawMaxValue); } }
-    public static SoftFloat MinValue { get { return new SoftFloat(RawMinValue); } }
-    public static SoftFloat Epsilon { get { return new SoftFloat(RawEpsilon); } }
+    public static SoftFloat Zero => new();
+    public static SoftFloat PositiveInfinity => new(RawPositiveInfinity);
+    public static SoftFloat NegativeInfinity => new(RawNegativeInfinity);
+    public static SoftFloat NaN => new(RawNaN);
+    public static SoftFloat One => new(RawOne);
+    public static SoftFloat MinusOne => new(RawMinusOne);
+    public static SoftFloat MaxValue => new(RawMaxValue);
+    public static SoftFloat MinValue => new(RawMinValue);
+    public static SoftFloat Epsilon => new(RawEpsilon);
 
     public override string ToString()
     {
-        return ((float)this).ToString();
+        return $"{(float)this}";
     }
 
     public static explicit operator SoftFloat(float f)
@@ -174,51 +175,38 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
                     var raw = (uint)man & 0x80000000 | (uint)rawExp << 23 | (absMan & 0x7FFFFF);
                     return new SoftFloat(raw);
                 }
-                else
+
+                switch (rawExp)
                 {
-                    if (rawExp >= 255)
-                    {//Overflow
-                        if (man >= 0)
-                        {
-                            return PositiveInfinity;
-                        }
-                        else
-                        {
-                            return NegativeInfinity;
-                        }
-                    }
-                    if (rawExp >= -24)//Fixme
+                    //Overflow
+                    case >= 255 when man >= 0:
+                        return PositiveInfinity;
+                    case >= 255:
+                        return NegativeInfinity;
+                    //Fixme
+                    case >= -24:
                     {
                         var raw = (uint)man & 0x80000000 | absMan >> (-rawExp + 1);
                         return new SoftFloat(raw);
                     }
-                    return Zero;
-                }
-            }
-            else
-            {//special
-
-                if (rawExp2 != 255)//f1 is NaN, +Inf, -Inf and f2 is finite
-                {
-                    return f1;
-                }
-                // Both not finite
-                if (f1._raw == f2._raw)
-                {
-                    return f1;
-                }
-                else
-                {
-                    return NaN;
+                    default:
+                        return Zero;
                 }
             }
 
+            //special
+            if (rawExp2 != 255)//f1 is NaN, +Inf, -Inf and f2 is finite
+            {
+                return f1;
+            }
+
+            // Both not finite
+            return f1._raw == f2._raw ? f1 : NaN;
+
         }
-        else
-        {
-            //ToDo manually write this code
-            return f2 + f1;//flip operands
-        }
+
+        //ToDo manually write this code
+        return f2 + f1;//flip operands
     }
 
     public static SoftFloat operator -(SoftFloat f1, SoftFloat f2)
@@ -258,53 +246,20 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
             man1 = (int)(((f1.RawMantissa | 0x800000) ^ sign1) - sign1);
         }
         else
-        {//Non finite
-            if (f1._raw == RawPositiveInfinity)
+        {
+            return f1._raw switch
             {
-                if (f2.IsZero())
-                {
-                    return NaN;
-                }
-
-                if (f2.IsNaN())
-                {
-                    return f2;
-                }
-
-                if ((int)f2._raw >= 0)
-                {
-                    return PositiveInfinity;
-                }
-                else
-                {
-                    return NegativeInfinity;
-                }
-            }
-            else if (f1._raw == RawNegativeInfinity)
-            {
-                if (f2.IsZero())
-                {
-                    return NaN;
-                }
-
-                if (f2.IsNaN())
-                {
-                    return f2;
-                }
-
-                if ((int)f2._raw < 0)
-                {
-                    return PositiveInfinity;
-                }
-                else
-                {
-                    return NegativeInfinity;
-                }
-            }
-            else
-            {
-                return f1;
-            }
+                //Non finite
+                RawPositiveInfinity when f2.IsZero() => NaN,
+                RawPositiveInfinity when f2.IsNaN() => f2,
+                RawPositiveInfinity when (int)f2._raw >= 0 => PositiveInfinity,
+                RawPositiveInfinity => NegativeInfinity,
+                RawNegativeInfinity when f2.IsZero() => NaN,
+                RawNegativeInfinity when f2.IsNaN() => f2,
+                RawNegativeInfinity when (int)f2._raw < 0 => PositiveInfinity,
+                RawNegativeInfinity => NegativeInfinity,
+                _ => f1
+            };
         }
 
         int man2;
@@ -335,43 +290,18 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
             man2 = (int)(((f2.RawMantissa | 0x800000) ^ sign2) - sign2);
         }
         else
-        {//Non finite
-            if (f2._raw == RawPositiveInfinity)
+        {
+            return f2._raw switch
             {
-                if (f1.IsZero())
-                {
-                    return NaN;
-                }
-
-                if ((int)f1._raw >= 0)
-                {
-                    return PositiveInfinity;
-                }
-                else
-                {
-                    return NegativeInfinity;
-                }
-            }
-            else if (f2._raw == RawNegativeInfinity)
-            {
-                if (f1.IsZero())
-                {
-                    return NaN;
-                }
-
-                if ((int)f1._raw < 0)
-                {
-                    return PositiveInfinity;
-                }
-                else
-                {
-                    return NegativeInfinity;
-                }
-            }
-            else
-            {
-                return f2;
-            }
+                //Non finite
+                RawPositiveInfinity when f1.IsZero() => NaN,
+                RawPositiveInfinity when (int)f1._raw >= 0 => PositiveInfinity,
+                RawPositiveInfinity => NegativeInfinity,
+                RawNegativeInfinity when f1.IsZero() => NaN,
+                RawNegativeInfinity when (int)f1._raw < 0 => PositiveInfinity,
+                RawNegativeInfinity => NegativeInfinity,
+                _ => f2
+            };
         }
 
         var longMan = man1 * (long)man2;
@@ -386,20 +316,18 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
             rawExp++;
         }
         Debug.Assert(absMan >> 23 == 1);
-        if (rawExp >= 255)
+        switch (rawExp)
         {
-            return new SoftFloat(sign ^ RawPositiveInfinity);//Overflow
-        }
-
-        if (rawExp <= 0)
-        {//Subnorms/Underflow
-            if (rawExp <= -24)//Fixme - check correct value
-            {
+            case >= 255:
+                return new SoftFloat(sign ^ RawPositiveInfinity);//Overflow
+            //Subnorms/Underflow
+            //Fixme - check correct value
+            case <= 0 and <= -24:
                 return new SoftFloat(sign);
-            }
-
-            absMan >>= -rawExp + 1;
-            rawExp = 0;
+            case <= 0:
+                absMan >>= -rawExp + 1;
+                rawExp = 0;
+                break;
         }
 
         var raw = sign | (uint)rawExp << 23 | absMan & 0x7FFFFF;
@@ -438,17 +366,13 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
             return (_raw == other._raw) ||
                 ((_raw & 0x7FFFFFFF) == 0) && ((other._raw & 0x7FFFFFFF) == 0);//0==-0
         }
-        else
+
+        if (RawMantissa == 0)
         {
-            if (RawMantissa == 0)
-            {
-                return _raw == other._raw;//infinities
-            }
-            else
-            {
-                return other.RawMantissa != 0;//NaNs are equal for `Equals` (as opposed to the == operator)
-            }
+            return _raw == other._raw;//infinities
         }
+
+        return other.RawMantissa != 0;//NaNs are equal for `Equals` (as opposed to the == operator)
     }
 
     public override int GetHashCode()
@@ -462,10 +386,8 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
         {
             return (int)_raw;
         }
-        else
-        {
-            return unchecked((int)RawNaN);//All NaNs are equal
-        }
+
+        return unchecked((int)RawNaN);//All NaNs are equal
     }
 
     public static bool operator ==(SoftFloat f1, SoftFloat f2)
@@ -475,17 +397,13 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
             return (f1._raw == f2._raw) ||
                 ((f1._raw & 0x7FFFFFFF) == 0) && ((f2._raw & 0x7FFFFFFF) == 0);//0==-0
         }
-        else
+
+        if (f1.RawMantissa == 0)
         {
-            if (f1.RawMantissa == 0)
-            {
-                return f1._raw == f2._raw;//infinities
-            }
-            else
-            {
-                return false;//NaNs
-            }
+            return f1._raw == f2._raw;//infinities
         }
+
+        return false;//NaNs
     }
 
     public static bool operator !=(SoftFloat f1, SoftFloat f2)
@@ -657,7 +575,7 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
     {
         if (obj is not SoftFloat softFloat)
         {
-            throw new ArgumentException("obj");
+            throw new ArgumentException($"{nameof(obj)} must be of type {nameof(SoftFloat)}", nameof(obj));
         }
 
         return CompareTo(softFloat);
@@ -702,14 +620,8 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
         {
             return val1;
         }
-        else if (IsNaN(val1))
-        {
-            return val1;
-        }
-        else
-        {
-            return val2;
-        }
+
+        return IsNaN(val1) ? val1 : val2;
     }
 
     //Returns NaN iff either argument is NaN
@@ -719,14 +631,8 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
         {
             return val1;
         }
-        else if (IsNaN(val1))
-        {
-            return val1;
-        }
-        else
-        {
-            return val2;
-        }
+
+        return IsNaN(val1) ? val1 : val2;
     }
 
     public static int Sign(SoftFloat value)
@@ -740,14 +646,13 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
         {
             return 0;
         }
-        else if ((int)value >= 0)
+
+        if ((int)value >= 0)
         {
             return 1;
         }
-        else
-        {
-            return -1;
-        }
+
+        return -1;
     }
 
     public uint ToIeeeRaw()
@@ -759,25 +664,16 @@ public readonly struct SoftFloat : IEquatable<SoftFloat>, IComparable<SoftFloat>
     {
         if (!(IsFinite(f1) && IsFinite(f2)))
         {
-            if (f1.Equals(f2))
-            {
-                return 0;
-            }
-            else
-            {
-                return long.MaxValue;
-            }
+            return f1.Equals(f2) ? 0 : long.MaxValue;
         }
-        else
-        {
-            var sign1 = (uint)((int)f1._raw >> 31);
-            var val1 = (int)(((f1._raw) ^ (sign1 & 0x7FFFFFFF)) - sign1);
 
-            var sign2 = (uint)((int)f2._raw >> 31);
-            var val2 = (int)(((f2._raw) ^ (sign2 & 0x7FFFFFFF)) - sign2);
+        var sign1 = (uint)((int)f1._raw >> 31);
+        var val1 = (int)(((f1._raw) ^ (sign1 & 0x7FFFFFFF)) - sign1);
 
-            return Math.Abs(val1 - (long)val2);
-        }
+        var sign2 = (uint)((int)f2._raw >> 31);
+        var val2 = (int)(((f2._raw) ^ (sign2 & 0x7FFFFFFF)) - sign2);
+
+        return Math.Abs(val1 - (long)val2);
     }
 
     public static SoftFloat FromIeeeRaw(uint ieeeRaw)

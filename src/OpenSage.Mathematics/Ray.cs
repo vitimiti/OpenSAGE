@@ -108,7 +108,7 @@ public readonly struct Ray
     /// <summary>
     /// From XNA "Picking With Triangle Accuracy" sample.
     /// http://xbox.create.msdn.com/en-US/education/catalog/sample/picking_triangle
-    /// 
+    ///
     /// Checks whether a ray intersects a triangle. This uses the algorithm
     /// developed by Tomas Moller and Ben Trumbore, which was published in the
     /// Journal of Graphics Tools, volume 2, "Fast, Minimum Storage Ray-Triangle
@@ -133,7 +133,7 @@ public readonly struct Ray
             return false;
         }
 
-        float inverseDeterminant = 1.0f / determinant;
+        var inverseDeterminant = 1.0f / determinant;
 
         // Calculate the U parameter of the intersection point.
         var distanceVector = Vector3.Subtract(Position, triangle.V0);

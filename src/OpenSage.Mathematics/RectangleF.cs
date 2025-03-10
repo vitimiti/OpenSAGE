@@ -207,12 +207,7 @@ public readonly struct RectangleF
             return ContainmentType.Contains;
         }
 
-        if (Intersects(rect))
-        {
-            return ContainmentType.Intersects;
-        }
-
-        return ContainmentType.Disjoint;
+        return Intersects(rect) ? ContainmentType.Intersects : ContainmentType.Disjoint;
     }
 
     public RectangleF WithX(float x) => new(x, Y, Width, Height);

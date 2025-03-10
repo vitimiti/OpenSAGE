@@ -5,9 +5,9 @@ namespace OpenSage.Mathematics;
 
 public readonly record struct ColorRgba(byte R, byte G, byte B, byte A)
 {
-    public static readonly ColorRgba Transparent = new ColorRgba(255, 255, 255, 0);
-    public static readonly ColorRgba White = new ColorRgba(255, 255, 255, 255);
-    public static readonly ColorRgba DimGray = new ColorRgba(105, 105, 105, 255);
+    public static readonly ColorRgba Transparent = new(255, 255, 255, 0);
+    public static readonly ColorRgba White = new(255, 255, 255, 255);
+    public static readonly ColorRgba DimGray = new(105, 105, 105, 255);
 
     public static ColorRgba operator *(ColorRgba value, float scale)
     {
@@ -26,9 +26,9 @@ public readonly record struct ColorRgba(byte R, byte G, byte B, byte A)
 
     public string ToHex()
     {
-        byte[] data = { R, G, B, A };
+        byte[] data = [R, G, B, A];
 
-        string hex = BitConverter.ToString(data).Replace("-", string.Empty);
+        var hex = BitConverter.ToString(data).Replace("-", string.Empty);
         return hex;
     }
 
@@ -40,7 +40,7 @@ public readonly record struct ColorRgba(byte R, byte G, byte B, byte A)
     public static ColorRgba FromHex(in ColorRgba original, string hexString)
     {
         var hexVal = Convert.ToUInt32(hexString, 16);
-        bool hasAlpha = hexString.Length > 8;
+        var hasAlpha = hexString.Length > 8;
 
         var a = original.A;
 

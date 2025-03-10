@@ -88,12 +88,11 @@ public readonly struct Rectangle
 
     public override bool Equals(object? obj)
     {
-        if (!(obj is Rectangle))
+        if (obj is not Rectangle rectangle)
         {
             return false;
         }
 
-        var rectangle = (Rectangle)obj;
         return X == rectangle.X &&
                Y == rectangle.Y &&
                Width == rectangle.Width &&

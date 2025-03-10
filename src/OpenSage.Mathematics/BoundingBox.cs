@@ -20,8 +20,8 @@ public readonly struct BoundingBox : IBoundingVolume
         _matrix = Matrix4x4.Identity;
         _size = new Vector3(rect.Width, rect.Height, height);
         _center = new Vector3(rect.X + rect.Width / 2.0f, rect.Y + rect.Height / 2.0f, z + (height / 2.0f));
-        Vertices = new[]
-        {
+        Vertices =
+        [
             new Vector3(rect.X, rect.Y, z),
             new Vector3(rect.X + rect.Width, rect.Y, z),
             new Vector3(rect.X, rect.Y + rect.Height, z),
@@ -30,8 +30,8 @@ public readonly struct BoundingBox : IBoundingVolume
             new Vector3(rect.X, rect.Y, z + height),
             new Vector3(rect.X + rect.Width, rect.Y, z + height),
             new Vector3(rect.X, rect.Y + rect.Height, z + height),
-            new Vector3(rect.X + rect.Width, rect.Y + rect.Height, z + height),
-        };
+            new Vector3(rect.X + rect.Width, rect.Y + rect.Height, z + height)
+        ];
 
         _aaBox = new AxisAlignedBoundingBox(Vertices[0], Vertices[7]);
         _right = Vector3.UnitX;

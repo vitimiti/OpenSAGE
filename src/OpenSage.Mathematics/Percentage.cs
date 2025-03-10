@@ -25,6 +25,6 @@ public readonly struct Percentage
 
     public override string ToString()
     {
-        return _value.ToString();
+        return $"{_value}";
     }
 }

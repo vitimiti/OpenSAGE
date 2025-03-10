@@ -7,12 +7,12 @@ namespace OpenSage.Mathematics;
 [StructLayout(LayoutKind.Sequential)]
 public readonly struct ColorRgbaF : IEquatable<ColorRgbaF>
 {
-    public static readonly ColorRgbaF Transparent = new ColorRgbaF();
-    public static readonly ColorRgbaF White = new ColorRgbaF(1.0f, 1.0f, 1.0f, 1.0f);
-    public static readonly ColorRgbaF Black = new ColorRgbaF(0.0f, 0.0f, 0.0f, 1.0f);
-    public static readonly ColorRgbaF Red = new ColorRgbaF(1.0f, 0.0f, 0.0f, 1.0f);
-    public static readonly ColorRgbaF Green = new ColorRgbaF(0.0f, 1.0f, 0.0f, 1.0f);
-    public static readonly ColorRgbaF Blue = new ColorRgbaF(0.0f, 0.0f, 1.0f, 1.0f);
+    public static readonly ColorRgbaF Transparent = new();
+    public static readonly ColorRgbaF White = new(1.0f, 1.0f, 1.0f, 1.0f);
+    public static readonly ColorRgbaF Black = new(0.0f, 0.0f, 0.0f, 1.0f);
+    public static readonly ColorRgbaF Red = new(1.0f, 0.0f, 0.0f, 1.0f);
+    public static readonly ColorRgbaF Green = new(0.0f, 1.0f, 0.0f, 1.0f);
+    public static readonly ColorRgbaF Blue = new(0.0f, 0.0f, 1.0f, 1.0f);
 
     public readonly float R;
     public readonly float G;
@@ -73,10 +73,10 @@ public readonly struct ColorRgbaF : IEquatable<ColorRgbaF>
     public bool Equals(ColorRgbaF other)
     {
         return
-            R == other.R &&
-            G == other.G &&
-            B == other.B &&
-            A == other.A;
+            Math.Abs(R - other.R) < float.Epsilon &&
+            Math.Abs(G - other.G) < float.Epsilon &&
+            Math.Abs(B - other.B) < float.Epsilon &&
+            Math.Abs(A - other.A) < float.Epsilon;
     }
 
     public override int GetHashCode()
@@ -91,7 +91,8 @@ public readonly struct ColorRgbaF : IEquatable<ColorRgbaF>
 
     public ColorRgba ToColorRgba()
     {
-        static byte Transform(float f) => (byte)(f * 255.0f);
         return new ColorRgba(Transform(R), Transform(G), Transform(B), Transform(A));
+
+        static byte Transform(float f) => (byte)(f * 255.0f);
     }
 }

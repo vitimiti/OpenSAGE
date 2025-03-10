@@ -46,13 +46,6 @@ public readonly struct TransformedRectangle
             return (min, max);
         }
 
-        bool ProjectionsIntersect(Vector2 axis, in TransformedRectangle a, in TransformedRectangle b)
-        {
-            var (min1, max1) = ComputeMinMax(axis, a);
-            var (min2, max2) = ComputeMinMax(axis, b);
-            return min1 <= max2 && min2 <= max1;
-        }
-
         if (!ProjectionsIntersect(axis1, this, other))
         {
             return false;
@@ -74,6 +67,13 @@ public readonly struct TransformedRectangle
         }
 
         return true;
+
+        bool ProjectionsIntersect(Vector2 axis, in TransformedRectangle a, in TransformedRectangle b)
+        {
+            var (min1, max1) = ComputeMinMax(axis, a);
+            var (min2, max2) = ComputeMinMax(axis, b);
+            return min1 <= max2 && min2 <= max1;
+        }
     }
 
     public bool Intersects(in Vector2 center, float radius)
@@ -82,7 +82,7 @@ public readonly struct TransformedRectangle
         var height = (UpperLeft - LowerLeft).Length();
         var rectF = new RectangleF(Vector2.Zero, width, height);
 
-        var rectAngle = Vector2Utility.Angle(LowerRight, LowerLeft);
+        var rectAngle = LowerRight.Angle(LowerLeft);
         var newCenter = center - LowerLeft;
         newCenter = newCenter.RotateAroundPoint(Vector2.Zero, -rectAngle);
 

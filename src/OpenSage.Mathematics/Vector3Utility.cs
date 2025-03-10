@@ -9,7 +9,7 @@ public static class Vector3Utility
     public static Vector3 Slerp(in Vector3 start, in Vector3 end, float percent)
     {
         // Dot product - the cosine of the angle between 2 vectors.
-        float dot = Vector3.Dot(start, end);
+        var dot = Vector3.Dot(start, end);
         // Clamp it to be in the range of Acos()
         // This may be unnecessary, but floating point
         // precision can be a fickle mistress.
@@ -17,8 +17,8 @@ public static class Vector3Utility
         // Acos(dot) returns the angle between start and end,
         // And multiplying that by percent returns the angle between
         // start and the final result.
-        float theta = MathF.Acos(dot) * percent;
-        Vector3 RelativeVec = end - start * dot;
+        var theta = MathF.Acos(dot) * percent;
+        var RelativeVec = end - start * dot;
         RelativeVec = Vector3.Normalize(RelativeVec);     // Orthonormal basis
                                                           // The final result.
         return ((start * MathF.Cos(theta)) + (RelativeVec * MathF.Sin(theta)));

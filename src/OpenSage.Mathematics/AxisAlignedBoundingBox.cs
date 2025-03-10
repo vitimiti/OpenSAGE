@@ -33,8 +33,8 @@ public readonly struct AxisAlignedBoundingBox : IBoundingVolume
         }
     }
 
-    private static readonly Vector3 MaxVector3 = new Vector3(float.MaxValue);
-    private static readonly Vector3 MinVector3 = new Vector3(float.MinValue);
+    private static readonly Vector3 MaxVector3 = new(float.MaxValue);
+    private static readonly Vector3 MinVector3 = new(float.MinValue);
 
     public static AxisAlignedBoundingBox CreateFromPoints(params Vector3[] points) => CreateFromPoints(points.AsEnumerable());
 
@@ -53,7 +53,7 @@ public readonly struct AxisAlignedBoundingBox : IBoundingVolume
 
         if (empty)
         {
-            throw new ArgumentException();
+            throw new ArgumentException($"{nameof(points)} must not be empty", nameof(points));
         }
 
         return new AxisAlignedBoundingBox(minVec, maxVec);

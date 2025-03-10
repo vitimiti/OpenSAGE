@@ -8,7 +8,7 @@ namespace OpenSage.Mathematics;
 /// </summary>
 public readonly struct Size : IEquatable<Size>
 {
-    public static readonly Size Zero = new Size(0, 0);
+    public static readonly Size Zero = new(0, 0);
 
     /// <summary>
     /// Gets the width.
@@ -62,7 +62,7 @@ public readonly struct Size : IEquatable<Size>
     public override bool Equals(object? obj)
     {
         if (ReferenceEquals(null, obj)) return false;
-        return obj is Size && Equals((Size)obj);
+        return obj is Size size && Equals(size);
     }
 
     /// <inheritdoc />

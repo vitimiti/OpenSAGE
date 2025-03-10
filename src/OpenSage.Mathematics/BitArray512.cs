@@ -186,7 +186,7 @@ public struct BitArray512
     {
         if (Length != other.Length)
         {
-            throw new ArgumentException(nameof(other), "Both BitArrays must have the same length.");
+            throw new ArgumentException("Both BitArrays must have the same length.", nameof(other));
         }
 
         _a0 = other._a0;
@@ -213,7 +213,7 @@ public struct BitArray512
                BitOperations.PopCount(_a7);
     }
 
-    public BitArray512 And(in BitArray512 other)
+    public readonly BitArray512 And(in BitArray512 other)
     {
         return new BitArray512(Math.Max(Length, other.Length))
         {
@@ -229,7 +229,7 @@ public struct BitArray512
         };
     }
 
-    public BitArray512 Or(in BitArray512 other)
+    public readonly BitArray512 Or(in BitArray512 other)
     {
         return new BitArray512(Math.Max(Length, other.Length))
         {

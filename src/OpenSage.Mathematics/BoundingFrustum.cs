@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System;
+using System.Numerics;
 
 namespace OpenSage.Mathematics;
 
@@ -94,6 +95,9 @@ public sealed class BoundingFrustum
                 case PlaneIntersectionType.Intersecting:
                     intersects = true;
                     break;
+                case PlaneIntersectionType.Back:
+                default:
+                    break;
             }
         }
 
@@ -115,6 +119,9 @@ public sealed class BoundingFrustum
 
                 case PlaneIntersectionType.Intersecting:
                     intersects = true;
+                    break;
+                case PlaneIntersectionType.Back:
+                default:
                     break;
             }
         }
@@ -196,7 +203,7 @@ public sealed class BoundingFrustum
         result.Z = (v1.Z + v2.Z + v3.Z) / f;
     }
 
-    private void NormalizePlane(ref Plane p)
+    private static void NormalizePlane(ref Plane p)
     {
         var factor = 1f / p.Normal.Length();
         p.Normal.X *= factor;

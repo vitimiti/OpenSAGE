@@ -30,14 +30,14 @@ public readonly struct SizeF : IEquatable<SizeF>
 
     public override bool Equals(object? obj)
     {
-        return obj is SizeF && Equals((SizeF)obj);
+        return obj is SizeF sizeF && Equals(sizeF);
     }
 
     public bool Equals(SizeF other)
     {
         return
-            Width == other.Width &&
-            Height == other.Height;
+            Math.Abs(Width - other.Width) < float.Epsilon &&
+            Math.Abs(Height - other.Height) < float.Epsilon;
     }
 
     public override int GetHashCode()

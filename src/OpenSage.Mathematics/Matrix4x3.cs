@@ -59,18 +59,18 @@ public readonly struct Matrix4x3 : IEquatable<Matrix4x3>
 
     public bool Equals(Matrix4x3 other)
     {
-        return M11 == other.M11 &&
-               M21 == other.M21 &&
-               M31 == other.M31 &&
-               M41 == other.M41 &&
-               M12 == other.M12 &&
-               M22 == other.M22 &&
-               M32 == other.M32 &&
-               M42 == other.M42 &&
-               M13 == other.M13 &&
-               M23 == other.M23 &&
-               M33 == other.M33 &&
-               M43 == other.M43;
+        return Math.Abs(M11 - other.M11) < float.Epsilon &&
+               Math.Abs(M21 - other.M21) < float.Epsilon &&
+               Math.Abs(M31 - other.M31) < float.Epsilon &&
+               Math.Abs(M41 - other.M41) < float.Epsilon &&
+               Math.Abs(M12 - other.M12) < float.Epsilon &&
+               Math.Abs(M22 - other.M22) < float.Epsilon &&
+               Math.Abs(M32 - other.M32) < float.Epsilon &&
+               Math.Abs(M42 - other.M42) < float.Epsilon &&
+               Math.Abs(M13 - other.M13) < float.Epsilon &&
+               Math.Abs(M23 - other.M23) < float.Epsilon &&
+               Math.Abs(M33 - other.M33) < float.Epsilon &&
+               Math.Abs(M43 - other.M43) < float.Epsilon;
     }
 
     public override int GetHashCode()

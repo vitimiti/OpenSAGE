@@ -89,13 +89,11 @@ public static class Matrix4x4Utility
 
     public static void RotateX(ref this Matrix4x4 value, float theta)
     {
-        float tmp1, tmp2;
-
         var s = MathF.Sin(theta);
         var c = MathF.Cos(theta);
 
-        tmp1 = value.M21;
-        tmp2 = value.M31;
+        var tmp1 = value.M21;
+        var tmp2 = value.M31;
 
         value.M21 = c * tmp1 + s * tmp2;
         value.M31 = -s * tmp1 + c * tmp2;
@@ -115,13 +113,11 @@ public static class Matrix4x4Utility
 
     public static void RotateY(ref this Matrix4x4 value, float theta)
     {
-        float tmp1, tmp2;
-
         var s = MathF.Sin(theta);
         var c = MathF.Cos(theta);
 
-        tmp1 = value.M11;
-        tmp2 = value.M31;
+        var tmp1 = value.M11;
+        var tmp2 = value.M31;
 
         value.M11 = c * tmp1 - s * tmp2;
         value.M31 = s * tmp1 + c * tmp2;
@@ -141,13 +137,11 @@ public static class Matrix4x4Utility
 
     public static void RotateZ(ref this Matrix4x4 value, float theta)
     {
-        float tmp1, tmp2;
-
         var s = MathF.Sin(theta);
         var c = MathF.Cos(theta);
 
-        tmp1 = value.M11;
-        tmp2 = value.M21;
+        var tmp1 = value.M11;
+        var tmp2 = value.M21;
 
         value.M11 = c * tmp1 + s * tmp2;
         value.M21 = -s * tmp1 + c * tmp2;

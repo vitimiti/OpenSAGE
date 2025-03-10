@@ -23,8 +23,8 @@ public static class TriangleUtility
         var b = ((v3.Y - v1.Y) * (pointX - v3.X) + (v1.X - v3.X) * (pointY - v3.Y)) / denominator;
         var c = 1 - a - b;
 
-        return -epsilon <= a && a <= onePlusEpsilon &&
-            -epsilon <= b && b <= onePlusEpsilon &&
-            -epsilon <= c && c <= onePlusEpsilon;
+        return a is >= -epsilon and <= onePlusEpsilon &&
+               b is >= -epsilon and <= onePlusEpsilon &&
+               c is >= -epsilon and <= onePlusEpsilon;
     }
 }

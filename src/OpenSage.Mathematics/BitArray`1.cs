@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 using System.Runtime.CompilerServices;
 
 namespace OpenSage.Mathematics;
@@ -15,7 +16,7 @@ public sealed class BitArray<TEnum> : IEquatable<BitArray<TEnum>>
         return result;
     }
 
-    private BitArray512 _data;
+    private readonly BitArray512 _data;
 
     public bool AnyBitSet => _data.AnyBitSet;
     public int NumBitsSet => _data.NumBitsSet;
@@ -145,13 +146,7 @@ public sealed class BitArray<TEnum> : IEquatable<BitArray<TEnum>>
     {
         get
         {
-            var result = string.Empty;
-
-            foreach (var bit in GetSetBits())
-            {
-                result += bit.ToString() + ", ";
-            }
-
+            var result = GetSetBits().Aggregate(string.Empty, (current, bit) => current + ($"{bit}, "));
             return (result == string.Empty)
                 ? "(None)"
                 : result.Trim(' ', ',');
@@ -160,10 +155,7 @@ public sealed class BitArray<TEnum> : IEquatable<BitArray<TEnum>>
 
     public bool Equals(BitArray<TEnum>? other) => _data.Equals(other?._data);
 
-    public override int GetHashCode()
-    {
-        return _data.GetHashCode();
-    }
+    public override int GetHashCode() => _data.GetHashCode();
 
     public BitArray<TEnum> Clone()
     {
@@ -172,11 +164,13 @@ public sealed class BitArray<TEnum> : IEquatable<BitArray<TEnum>>
         return result;
     }
 
-    private static readonly ConcurrentDictionary<Type, int> CachedNumValues = new();
+    private static ConcurrentDictionary<Type, int> CachedNumValues => new();
 
     private static int GetNumValues()
     {
         var key = typeof(TEnum);
         return CachedNumValues.GetOrAdd(key, x => Enum.GetValues(x).Length);
     }
+
+    public override bool Equals(object? obj) => Equals(obj as BitArray<TEnum>);
 }

@@ -24,8 +24,7 @@ public static class QuaternionUtility
 
     public static Quaternion CreateLookRotation(in Vector3 forward, Vector3 up)
     {
-        if (forward == up)
-            up = Vector3.UnitY;
+        if (forward == up) up = Vector3.UnitY;
         var matrix = Matrix4x4.CreateLookAt(Vector3.Zero, forward, up);
         return Quaternion.CreateFromRotationMatrix(Matrix4x4Utility.Invert(matrix));
     }
