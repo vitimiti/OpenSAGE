@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using OpenSage.Mathematics;
 using Veldrid;
 
@@ -6,7 +7,7 @@ namespace OpenSage.Rendering;
 
 public sealed class RenderBucket
 {
-    private readonly List<RenderObject> _renderObjects = new();
+    private readonly List<RenderObject> _renderObjects = [];
 
     private readonly RenderList _forwardPassList = new("Forward Pass");
     private readonly RenderList _shadowPassList = new("Shadow Pass");
@@ -26,18 +27,20 @@ public sealed class RenderBucket
     {
         _renderObjects.Add(renderObject);
 
-        if (renderObject.MaterialPass != null)
+        if (renderObject.MaterialPass is null)
         {
-            var (forwardPass, shadowPass) = renderObject.MaterialPass;
-            if (forwardPass != null)
-            {
-                _forwardPassList.AddObject(renderObject, forwardPass);
-            }
+            return;
+        }
 
-            if (shadowPass != null)
-            {
-                _shadowPassList.AddObject(renderObject, shadowPass);
-            }
+        var (forwardPass, shadowPass) = renderObject.MaterialPass;
+        if (forwardPass != null)
+        {
+            _forwardPassList.AddObject(renderObject, forwardPass);
+        }
+
+        if (shadowPass != null)
+        {
+            _shadowPassList.AddObject(renderObject, shadowPass);
         }
 
         // TODO: Extract child objects and store in appropriate render buckets (opaque / transparent / etc.)
@@ -47,18 +50,20 @@ public sealed class RenderBucket
     {
         _renderObjects.Remove(renderObject);
 
-        if (renderObject.MaterialPass != null)
+        if (renderObject.MaterialPass is null)
         {
-            var (forwardPass, shadowPass) = renderObject.MaterialPass;
-            if (forwardPass != null)
-            {
-                _forwardPassList.RemoveObject(renderObject, forwardPass);
-            }
+            return;
+        }
 
-            if (shadowPass != null)
-            {
-                _shadowPassList.RemoveObject(renderObject, shadowPass);
-            }
+        var (forwardPass, shadowPass) = renderObject.MaterialPass;
+        if (forwardPass is not null)
+        {
+            _forwardPassList.RemoveObject(renderObject, forwardPass);
+        }
+
+        if (shadowPass is not null)
+        {
+            _shadowPassList.RemoveObject(renderObject, shadowPass);
         }
     }
 
@@ -95,10 +100,7 @@ public sealed class RenderBucket
                 commandList.SetGraphicsResourceSet(1, passResourceSet);
             }
 
-            if (renderObject.Item2.MaterialResourceSet != null)
-            {
-                commandList.SetGraphicsResourceSet(2, renderObject.Item2.MaterialResourceSet);
-            }
+            commandList.SetGraphicsResourceSet(2, renderObject.Item2.MaterialResourceSet);
 
             renderObject.Item1.Render(commandList);
 
@@ -125,18 +127,8 @@ public sealed class RenderScene
         return result;
     }
 
-    private RenderBucket? GetRenderBucketImpl(string name)
-    {
-        foreach (var renderBucket in _renderBuckets)
-        {
-            if (renderBucket.Name == name)
-            {
-                return renderBucket;
-            }
-        }
-
-        return null;
-    }
+    private RenderBucket? GetRenderBucketImpl(string name) =>
+        _renderBuckets.FirstOrDefault(renderBucket => renderBucket.Name == name);
 
     public RenderBucket CreateRenderBucket(string name, int priority)
     {
@@ -220,9 +212,9 @@ internal sealed class RenderList
 {
     public readonly string Name;
 
-    public readonly List<(RenderObject, Material)> AllObjects = new();
+    public readonly List<(RenderObject, Material)> AllObjects = [];
 
-    public readonly List<(RenderObject, Material)> CulledObjects = new();
+    public readonly List<(RenderObject, Material)> CulledObjects = [];
 
     public RenderList(string name)
     {

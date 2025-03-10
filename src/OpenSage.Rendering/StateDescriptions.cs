@@ -29,8 +29,8 @@ public static class BlendStateDescriptionUtility
 {
     public static readonly BlendStateDescription SingleAdditiveBlendNoAlpha = new BlendStateDescription
     {
-        AttachmentStates = new[]
-        {
+        AttachmentStates =
+        [
             new BlendAttachmentDescription
             {
                 BlendEnabled = true,
@@ -41,6 +41,6 @@ public static class BlendStateDescriptionUtility
                 DestinationAlphaFactor = BlendFactor.One,
                 AlphaFunction = BlendFunction.Add,
             }
-        }
+        ]
     };
 }

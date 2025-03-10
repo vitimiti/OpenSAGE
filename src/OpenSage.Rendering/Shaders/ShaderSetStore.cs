@@ -24,11 +24,13 @@ public sealed class ShaderSetStore : DisposableBase
     {
         var key = typeof(T);
 
-        if (!_cache.TryGetValue(key, out var result))
+        if (_cache.TryGetValue(key, out var result))
         {
-            result = AddDisposable(createShaderSet());
-            _cache.Add(key, result);
+            return (T)result;
         }
+
+        result = AddDisposable(createShaderSet());
+        _cache.Add(key, result);
 
         return (T)result;
     }

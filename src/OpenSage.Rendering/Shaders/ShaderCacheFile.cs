@@ -114,15 +114,15 @@ internal sealed class ShaderCacheFile
         }
 
         binaryWriter.Write(ResourceLayoutDescriptions.Length);
-        for (var i = 0; i < ResourceLayoutDescriptions.Length; i++)
+        foreach (var resourceLayoutDescription in ResourceLayoutDescriptions)
         {
-            ref readonly var description = ref ResourceLayoutDescriptions[i];
+            ref readonly var description = ref resourceLayoutDescription;
 
             binaryWriter.Write(description.Elements.Length);
 
-            for (var j = 0; j < description.Elements.Length; j++)
+            foreach (var descriptionElement in description.Elements)
             {
-                ref readonly var element = ref description.Elements[j];
+                ref readonly var element = ref descriptionElement;
 
                 binaryWriter.Write(element.Name);
                 binaryWriter.Write((byte)element.Kind);

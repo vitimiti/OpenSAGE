@@ -107,12 +107,10 @@ internal static class ShaderCrossCompiler
     private static byte[] ReadShaderSpv(Assembly assembly, string shaderName, string shaderType)
     {
         var bytecodeShaderName = $"OpenSage.Assets.Shaders.{shaderName}.{shaderType}.spv";
-        using (var shaderStream = assembly.GetManifestResourceStream(bytecodeShaderName))
-        using (var memoryStream = new MemoryStream())
-        {
-            shaderStream?.CopyTo(memoryStream);
-            return memoryStream.ToArray();
-        }
+        using var shaderStream = assembly.GetManifestResourceStream(bytecodeShaderName);
+        using var memoryStream = new MemoryStream();
+        shaderStream?.CopyTo(memoryStream);
+        return memoryStream.ToArray();
     }
 
     private static byte[] CompileHlsl(string hlsl, string profile)

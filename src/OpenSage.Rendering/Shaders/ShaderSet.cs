@@ -39,7 +39,7 @@ public abstract class ShaderSet : DisposableBase
 
         Description = new ShaderSetDescription(
             vertexDescriptors,
-            new[] { vertexShader, fragmentShader });
+            [vertexShader, fragmentShader]);
 
         ResourceLayouts = new ResourceLayout[cacheFile.ResourceLayoutDescriptions.Length];
         for (var i = 0; i < cacheFile.ResourceLayoutDescriptions.Length; i++)
