@@ -24,8 +24,8 @@ internal static class MipmapHelper
 
     public static int GetDimension(int largestLevelDimension, int mipLevel)
     {
-        int ret = largestLevelDimension;
-        for (int i = 0; i < mipLevel; i++)
+        var ret = largestLevelDimension;
+        for (var i = 0; i < mipLevel; i++)
         {
             ret /= 2;
         }
@@ -35,18 +35,18 @@ internal static class MipmapHelper
 
     internal static Image<Rgba32>[] GenerateMipmaps(Image<Rgba32> baseImage)
     {
-        int mipLevelCount = ComputeMipLevels(baseImage.Width, baseImage.Height);
-        Image<Rgba32>[] mipLevels = new Image<Rgba32>[mipLevelCount];
+        var mipLevelCount = ComputeMipLevels(baseImage.Width, baseImage.Height);
+        var mipLevels = new Image<Rgba32>[mipLevelCount];
         mipLevels[0] = baseImage;
-        int i = 1;
+        var i = 1;
 
-        int currentWidth = baseImage.Width;
-        int currentHeight = baseImage.Height;
+        var currentWidth = baseImage.Width;
+        var currentHeight = baseImage.Height;
         while (currentWidth != 1 || currentHeight != 1)
         {
-            int newWidth = Math.Max(1, currentWidth / 2);
-            int newHeight = Math.Max(1, currentHeight / 2);
-            Image<Rgba32> newImage = baseImage.Clone(context => context.Resize(newWidth, newHeight, KnownResamplers.Lanczos3));
+            var newWidth = Math.Max(1, currentWidth / 2);
+            var newHeight = Math.Max(1, currentHeight / 2);
+            var newImage = baseImage.Clone(context => context.Resize(newWidth, newHeight, KnownResamplers.Lanczos3));
             Debug.Assert(i < mipLevelCount);
             mipLevels[i] = newImage;
 

@@ -62,46 +62,44 @@ public class ImageSharpTexture
 
     private unsafe Texture CreateTextureViaStaging(GraphicsDevice gd, ResourceFactory factory)
     {
-        Texture staging = factory.CreateTexture(
+        var staging = factory.CreateTexture(
             TextureDescription.Texture2D(Width, Height, MipLevels, 1, Format, TextureUsage.Staging));
 
-        Texture ret = factory.CreateTexture(
+        var ret = factory.CreateTexture(
             TextureDescription.Texture2D(Width, Height, MipLevels, 1, Format, TextureUsage.Sampled));
 
-        CommandList cl = gd.ResourceFactory.CreateCommandList();
+        var cl = gd.ResourceFactory.CreateCommandList();
         cl.Begin();
         for (uint level = 0; level < MipLevels; level++)
         {
-            Image<Rgba32> image = Images[level];
+            var image = Images[level];
             if (!image.DangerousTryGetSinglePixelMemory(out Memory<Rgba32> pixelSpan))
             {
                 throw new VeldridException("Unable to get image pixelspan.");
             }
-            using (var pin = pixelSpan.Pin())
+
+            using var pin = pixelSpan.Pin();
+            var map = gd.Map(staging, MapMode.Write, level);
+            var rowWidth = (uint)(image.Width * 4);
+            if (rowWidth == map.RowPitch)
             {
-                MappedResource map = gd.Map(staging, MapMode.Write, level);
-                uint rowWidth = (uint)(image.Width * 4);
-                if (rowWidth == map.RowPitch)
-                {
-                    Unsafe.CopyBlock(map.Data.ToPointer(), pin.Pointer, (uint)(image.Width * image.Height * 4));
-                }
-                else
-                {
-                    for (uint y = 0; y < image.Height; y++)
-                    {
-                        byte* dstStart = (byte*)map.Data.ToPointer() + y * map.RowPitch;
-                        byte* srcStart = (byte*)pin.Pointer + y * rowWidth;
-                        Unsafe.CopyBlock(dstStart, srcStart, rowWidth);
-                    }
-                }
-                gd.Unmap(staging, level);
-
-                cl.CopyTexture(
-                    staging, 0, 0, 0, level, 0,
-                    ret, 0, 0, 0, level, 0,
-                    (uint)image.Width, (uint)image.Height, 1, 1);
-
+                Unsafe.CopyBlock(map.Data.ToPointer(), pin.Pointer, (uint)(image.Width * image.Height * 4));
             }
+            else
+            {
+                for (uint y = 0; y < image.Height; y++)
+                {
+                    var dstStart = (byte*)map.Data.ToPointer() + y * map.RowPitch;
+                    var srcStart = (byte*)pin.Pointer + y * rowWidth;
+                    Unsafe.CopyBlock(dstStart, srcStart, rowWidth);
+                }
+            }
+            gd.Unmap(staging, level);
+
+            cl.CopyTexture(
+                staging, 0, 0, 0, level, 0,
+                ret, 0, 0, 0, level, 0,
+                (uint)image.Width, (uint)image.Height, 1, 1);
         }
         cl.End();
 
@@ -114,12 +112,12 @@ public class ImageSharpTexture
 
     private unsafe Texture CreateTextureViaUpdate(GraphicsDevice gd, ResourceFactory factory)
     {
-        Texture tex = factory.CreateTexture(TextureDescription.Texture2D(
+        var tex = factory.CreateTexture(TextureDescription.Texture2D(
             Width, Height, MipLevels, 1, Format, TextureUsage.Sampled));
-        for (int level = 0; level < MipLevels; level++)
+        for (var level = 0; level < MipLevels; level++)
         {
-            Image<Rgba32> image = Images[level];
-            if (!image.DangerousTryGetSinglePixelMemory(out Memory<Rgba32> pixelSpan))
+            var image = Images[level];
+            if (!image.DangerousTryGetSinglePixelMemory(out var pixelSpan))
             {
                 throw new VeldridException("Unable to get image pixelspan.");
             }
